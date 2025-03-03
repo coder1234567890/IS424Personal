@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clack Laptop Rental System</title>
+    <!-- Bulma CDN for styling -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+    />
+  </head>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="columns is-vcentered">
+      <div class="column is-narrow" style="padding-left: 20px">
+        <figure class="image" style="max-width: 128px; max-height: 128px">
+          <a id="clack">
+            <img src="Clack_Logo_no_background.png" alt="Bucky" />
+          </a>
+        </figure>
+      </div>
+      <div class="column has-text-centered">
+        <h1 class="title has-text-weight-bold has-text-info is-size-1">
+          Laptop Rental System
+        </h1>
+      </div>
+      <div class="column is-narrow"></div>
+    </div>
+  </header>
+
+  <!-- Navbar -->
+  <nav
+    class="navbar has-text-weight-bold mx-5 my-5"
+    role="navigation"
+    aria-label="main navigation"
+  >
+    <div
+      id="navbar"
+      class="navbar-menu is-flex is-justify-content-center is-align-items-center is-flex-wrap-wrap"
+    >
+      <a class="navbar-item button is-info is-outlined mx-2" id="homePage"
+        >🏠 Home</a
+      >
+      <a class="navbar-item button is-info is-outlined mx-2" id="reviewp"
+        >👉 About</a
+      >
+      <a class="navbar-item button is-info is-outlined mx-2" id="loginPageclick"
+        >⬇️ Login</a
+      >
+      <a
+        class="navbar-item button is-info is-outlined mx-2"
+        id="signupPageclick"
+        >⏬ Sign Up</a
+      >
+      <a
+        class="navbar-item button is-info is-outlined mx-2"
+        id="manageUsersPage"
+        >👥 Manage Users</a
+      >
+      <a
+        class="navbar-item button is-info is-outlined mx-2"
+        id="manageDevicesPage"
+        >📲 Manage Devices</a
+      >
+      <a
+        class="navbar-item button is-info is-outlined mx-2"
+        id="manageRentalsPage"
+        >🗄 Manage Rentals</a
+      >
+      <a
+        class="navbar-item button is-info is-outlined mx-2"
+        id="rentalHistoryPage"
+        >🗄 My Rentals</a
+      >
+      <a
+        class="navbar-item open-modal button is-info is-outlined mx-2"
+        id="contactITPage"
+        >🖥️ Contact IT</a
+      >
+      <a class="navbar-item button is-danger is-outlined mx-2" id="logoutPage"
+        >❌ Logout</a
+      >
+    </div>
+  </nav>
+
+  <body class="is-flex is-flex-direction-column is-fullheight">
+    <!-- Modal (optional) -->
+    <div class="modal" id="messageModal">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Send a Message</p>
+          <button class="delete" aria-label="close" id="closeModal"></button>
+        </header>
+        <section class="modal-card-body">
+          <div class="field">
+            <label class="label">Message</label>
+            <div class="control">
+              <textarea
+                class="textarea"
+                placeholder="Enter your message"
+              ></textarea>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Priority</label>
+            <div class="control">
+              <div class="select is-fullwidth">
+                <select>
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button is-info">Submit</button>
+          <button class="button is-light" id="closeModalFooter">Cancel</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Main Content (Request Rental) -->
+    <div id="main" class="columns is-flex is-justify-content-center is-hidden">
+      <div class="column is-half">
+        <div class="box">
+          <h1 class="title has-text-centered has-text-info">Request Rental</h1>
+          <div class="field">
+            <label class="label has-text-info">Start Date</label>
+            <div class="control">
+              <input
+                class="input is-info"
+                type="text"
+                placeholder="Enter Start Date"
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label has-text-info">End Date</label>
+            <div class="control">
+              <input
+                class="input is-info"
+                type="text"
+                placeholder="Enter End Date"
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label has-text-info">Reason For Rental</label>
+            <div class="control">
+              <input
+                class="input is-info"
+                type="text"
+                placeholder="Enter Reason"
+              />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label has-text-info">Device Selection</label>
+            <div class="control">
+              <div class="select is-info is-fullwidth">
+                <select>
+                  <option>Select a device</option>
+                  <option>Device 1</option>
+                  <option>Device 2</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="field is-grouped is-justify-content-center">
+            <div class="control">
+              <button class="button is-info">Submit</button>
+            </div>
+            <div class="control">
+              <button class="button is-info is-light">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Landing Page -->
+    <div id="landing page" class="is-hidden">
+      <div class="columns is-flex is-justify-content-center">
+        <div class="column is-half">
+          <div class="box">
+            <h1 class="title has-text-centered">
+              <strong>Please Sign Up or Login</strong>
+            </h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About Page -->
+    <div id="About Page" class="is-hidden">
+      <div class="columns is-flex is-justify-content-center">
+        <div class="column is-half">
+          <div class="box">
+            <h2 class="subtitle has-text-weight-bold is-info">
+              About This Site
+            </h2>
+            <p>
+              This platform was designed to streamline laptop rentals for
+              employees at Clack Corporation. Built by the IT department, our
+              goal is to provide a simple and efficient way for team members to
+              check out and manage laptops for work purposes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="is-hidden">
+      <div class="columns is-flex is-justify-content-center">
+        <div class="column is-half">
+          <div class="box">
+            <h1 class="title has-text-centered has-text-info">Login</h1>
+            <div class="field">
+              <label class="label has-text-info">Email</label>
+              <div class="control">
+                <input
+                  class="input is-info"
+                  type="email"
+                  placeholder="Enter your email"
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label class="label has-text-info">Password</label>
+              <div class="control">
+                <input
+                  class="input is-info"
+                  type="password"
+                  placeholder="Enter your password"
+                />
+              </div>
+            </div>
+            <div class="field is-grouped is-justify-content-center">
+              <div class="control">
+                <button class="button is-info">Login</button>
+              </div>
+              <div class="control">
+                <button class="button is-info is-light">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sign Up Page -->
+    <div id="signupPage" class="is-hidden">
+      <div class="columns is-flex is-justify-content-center">
+        <div class="column is-half">
+          <div class="box">
+            <h1 class="title has-text-centered has-text-info">Sign Up</h1>
+            <div class="field">
+              <label class="label has-text-info">Full Name</label>
+              <div class="control">
+                <input
+                  class="input is-info"
+                  type="text"
+                  placeholder="Enter your full name"
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label class="label has-text-info">Email</label>
+              <div class="control">
+                <input
+                  class="input is-info"
+                  type="email"
+                  placeholder="Enter your email"
+                />
+              </div>
+            </div>
+            <div class="field">
+              <label class="label has-text-info">Password</label>
+              <div class="control">
+                <input
+                  class="input is-info"
+                  type="password"
+                  placeholder="Enter your password"
+                />
+              </div>
+            </div>
+            <div class="field is-grouped is-justify-content-center">
+              <div class="control">
+                <button class="button is-info">Sign Up</button>
+              </div>
+              <div class="control">
+                <button class="button is-info is-light">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Devices Page -->
+    <div id="AdminDevicesPage" class="is-hidden">
+      <div class="columns is-flex is-justify-content-center">
+        <div class="column is-half">
+          <div class="box">
+            <h1 class="title"><strong>Devices</strong></h1>
+            <!-- Example device entry -->
+            <div class="box">
+              <h2 class="subtitle">MacBook Pro 16"</h2>
+              <p><strong>Device Type:</strong> Laptop</p>
+              <p><strong>Serial Number:</strong> SN12345XYZ</p>
+              <div class="buttons">
+                <button class="button is-small is-info">Edit</button>
+                <button class="button is-small is-danger">Delete</button>
+              </div>
+            </div>
+            <!-- Additional device entries can go here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Rentals Page -->
+    <div id="AdminRentalsPage" class="is-hidden">
+      <div class="columns is-flex is-justify-content-center">
+        <div class="column is-half">
+          <div class="box">
+            <h1 class="title"><strong>Manage Rentals</strong></h1>
+            <!-- Example rental entry -->
+            <div class="box">
+              <h2 class="subtitle">John Doe</h2>
+              <p><strong>Device:</strong> MacBook Pro 16"</p>
+              <p><strong>Purpose:</strong> Project Work</p>
+              <p><strong>Start Date:</strong> 2024-02-01</p>
+              <p><strong>End Date:</strong> 2024-02-10</p>
+              <div class="buttons">
+                <button class="button is-small is-info">Edit</button>
+                <button class="button is-small is-danger">Delete</button>
+              </div>
+            </div>
+            <!-- Additional rental entries can go here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Users Page -->
+    <div id="CurrentUsersPage" class="is-hidden">
+      <div class="columns is-flex is-justify-content-center">
+        <div class="column is-half">
+          <div class="box">
+            <h1 class="title"><strong>Current Users</strong></h1>
+            <!-- Example user entry -->
+            <div class="box">
+              <h2 class="subtitle">John Doe</h2>
+              <p><strong>Username:</strong> johndoe123</p>
+              <div class="buttons">
+                <button class="button is-small is-info">View Details</button>
+                <button class="button is-small is-danger">Remove</button>
+              </div>
+            </div>
+            <!-- Additional user entries can go here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rental History Page -->
+    <div id="RentalHistoryPage" class="is-hidden">
+      <div class="columns is-flex is-justify-content-center">
+        <div class="column is-full">
+          <div class="box">
+            <h1 class="title has-text-centered">
+              <strong>Rental History</strong>
+            </h1>
+            <div class="columns">
+              <!-- Current Rental Example -->
+              <div class="column">
+                <div class="box">
+                  <h2 class="subtitle"><strong>Current Rental</strong></h2>
+                  <p><strong>Device:</strong> MacBook Pro 16"</p>
+                  <p><strong>Purpose:</strong> Software Development</p>
+                  <p><strong>Start Date:</strong> 2024-02-01</p>
+                  <p><strong>End Date:</strong> 2024-02-10</p>
+                  <div class="buttons">
+                    <button class="button is-small is-info">
+                      Extend Rental
+                    </button>
+                    <button class="button is-small is-danger">
+                      Return Device
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <!-- Past Rentals Example -->
+              <div class="column">
+                <div class="box">
+                  <h2 class="subtitle"><strong>Past Rentals</strong></h2>
+                  <p><strong>Device:</strong> iPad Pro</p>
+                  <p><strong>Purpose:</strong> Business Travel</p>
+                  <p><strong>Start Date:</strong> 2023-12-15</p>
+                  <p><strong>End Date:</strong> 2023-12-22</p>
+                  <div class="buttons">
+                    <button class="button is-small is-info">
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <!-- Footer -->
+  <footer class="has-text-centered has-background-light mt-auto">
+    <br />
+    <p>Copyright © 2025 Clack Corporation</p>
+    <button id="ITFooter" class="button open-modal is-info is-outlined mt-3">
+      ⚡ Contact IT
+    </button>
+    <br /><br />
+  </footer>
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-firestore.js"></script>
+
+  <script src="app.js"></script>
+</html>
