@@ -124,7 +124,7 @@
       </div>
     </div>
 
-    <!-- Main Content (Request Rental) -->
+    <!-- Request Rental (Main) Page -->
     <div id="main" class="columns is-flex is-justify-content-center is-hidden">
       <div class="column is-half">
         <div class="box">
@@ -163,17 +163,16 @@
             <label class="label has-text-info">Device Selection</label>
             <div class="control">
               <div class="select is-info is-fullwidth">
-                <select>
+                <select id="deviceSelect">
                   <option>Select a device</option>
-                  <option>Device 1</option>
-                  <option>Device 2</option>
                 </select>
               </div>
             </div>
           </div>
+
           <div class="field is-grouped is-justify-content-center">
             <div class="control">
-              <button class="button is-info">Submit</button>
+              <button id="rentalSubmit" class="button is-info">Submit</button>
             </div>
             <div class="control">
               <button class="button is-info is-light">Cancel</button>
