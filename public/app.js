@@ -48,6 +48,9 @@ document.addEventListener("DOMContentLoaded", function () {
       loadUsers();
     } else if (pageId === "RentalHistoryPage") {
       loadRentalHistory();
+    } else if (pageId === "main") {
+      // When showing the main rental request page, load the device options.
+      loadDeviceOptions();
     }
   }
 
@@ -145,6 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("logoutPage").classList.remove("is-hidden");
       document.getElementById("loginPageclick").classList.add("is-hidden");
       document.getElementById("signupPageclick").classList.add("is-hidden");
+      document.getElementById("homePage").classList.remove("is-hidden");
 
       // Check for admin custom claim
       user
@@ -191,6 +195,7 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("manageRentalsPage").classList.add("is-hidden");
       document.getElementById("manageUsersPage").classList.add("is-hidden");
       document.getElementById("rentalHistoryPage").classList.add("is-hidden");
+      document.getElementById("homePage").classList.add("is-hidden");
     }
   });
 
@@ -283,6 +288,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Error loading devices for dropdown:", error);
       });
   }
+
   // When showing the Request Rental page ("main"), load device options
   if (
     document.getElementById("main") &&
@@ -297,8 +303,8 @@ document.addEventListener("DOMContentLoaded", function () {
       .get()
       .then((snapshot) => {
         // Add an "Add Device" button at the top of the page
-        let html = `<h1 class="title"><strong>Devices</strong></h1>
-                  <button id="addDeviceButton" class="button is-primary">Add Device</button>`;
+        let html = `<h1 class="title has-text-centered"><strong>Devices</strong></h1>
+            <button id="addDeviceButton" class="button is-primary">Add Device</button>`;
         snapshot.forEach((doc) => {
           const data = doc.data();
           html += `
@@ -521,29 +527,98 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Rental History Page (RentalHistory Collection)
   function loadRentalHistory() {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert("Please log in to view your rentals.");
+      return;
+    }
+    // Use displayName if available, otherwise fallback to email
+    const userName = user.displayName || user.email;
     const container = document.getElementById("RentalHistoryPage");
-    db.collection("rentalHistory")
-      .get()
-      .then((snapshot) => {
-        let html = `<h1 class="title has-text-centered"><strong>Rental History</strong></h1>`;
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          html += `
-            <div class="box" data-id="${doc.id}">
-              <h2 class="subtitle">${data.device || "Device"}</h2>
-              <p><strong>Purpose:</strong> ${data.purpose || "N/A"}</p>
-              <p><strong>Start Date:</strong> ${data.startDate || "N/A"}</p>
-              <p><strong>End Date:</strong> ${data.endDate || "N/A"}</p>
-              <div class="buttons">
-                <button class="button is-small is-info extend-rental">Extend Rental</button>
-                <button class="button is-small is-danger return-device">Return Device</button>
-              </div>
-            </div>
-          `;
+
+    // Query current rentals from "rentals" collection
+    const currentRentalsQuery = db
+      .collection("rentals")
+      .where("userName", "==", userName)
+      .get();
+
+    // Query past rentals from "rentalHistory" collection
+    const pastRentalsQuery = db
+      .collection("rentalHistory")
+      .where("userName", "==", userName)
+      .get();
+
+    Promise.all([currentRentalsQuery, pastRentalsQuery])
+      .then(([currentSnapshot, pastSnapshot]) => {
+        const currentRentals = [];
+        currentSnapshot.forEach((doc) => {
+          currentRentals.push({ id: doc.id, ...doc.data() });
         });
+
+        const pastRentals = [];
+        pastSnapshot.forEach((doc) => {
+          pastRentals.push({ id: doc.id, ...doc.data() });
+        });
+
+        let html = `<h1 class="title has-text-centered"><strong>My Rentals</strong></h1>`;
+
+        // Current Rentals Section
+        html += `<h2 class="subtitle has-text-centered"><strong>Current Rentals</strong></h2>`;
+        if (currentRentals.length === 0) {
+          html += `<p class="has-text-centered">No current rentals.</p>`;
+        } else {
+          html += `<div class="columns is-multiline is-centered">`;
+          currentRentals.forEach((rental) => {
+            html += `
+              <div class="column is-one-third">
+                <div class="box has-text-centered" data-id="${rental.id}">
+                  <h2 class="subtitle">${rental.device || "Device"}</h2>
+                  <p><strong>Purpose:</strong> ${rental.purpose || "N/A"}</p>
+                  <p><strong>Start Date:</strong> ${
+                    rental.startDate || "N/A"
+                  }</p>
+                  <p><strong>End Date:</strong> ${rental.endDate || "N/A"}</p>
+                  <div class="buttons is-centered">
+                    <button class="button is-small is-info extend-rental">Extend Rental</button>
+                    <button class="button is-small is-danger return-device">Return Device</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
+        // Past Rentals Section
+        html += `<h2 class="subtitle has-text-centered"><strong>Past Rentals</strong></h2>`;
+        if (pastRentals.length === 0) {
+          html += `<p class="has-text-centered">No past rentals.</p>`;
+        } else {
+          html += `<div class="columns is-multiline is-centered">`;
+          pastRentals.forEach((rental) => {
+            html += `
+              <div class="column is-one-third">
+                <div class="box has-text-centered" data-id="${rental.id}">
+                  <h2 class="subtitle">${rental.device || "Device"}</h2>
+                  <p><strong>Purpose:</strong> ${rental.purpose || "N/A"}</p>
+                  <p><strong>Start Date:</strong> ${
+                    rental.startDate || "N/A"
+                  }</p>
+                  <p><strong>End Date:</strong> ${rental.endDate || "N/A"}</p>
+                  <div class="buttons is-centered">
+                    <button class="button is-small is-info view-details">View Details</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        }
+
         container.innerHTML = html;
+
+        // Attach event listeners for current rentals
         container.querySelectorAll(".extend-rental").forEach((btn) => {
           btn.addEventListener("click", function (e) {
             const id = e.target.closest(".box").dataset.id;
@@ -556,8 +631,15 @@ document.addEventListener("DOMContentLoaded", function () {
             returnDevice(id);
           });
         });
+        // Attach event listener for past rentals' view details button
+        container.querySelectorAll(".view-details").forEach((btn) => {
+          btn.addEventListener("click", function (e) {
+            const id = e.target.closest(".box").dataset.id;
+            viewRentalDetails(id);
+          });
+        });
       })
-      .catch((err) => console.error("Error loading rental history:", err));
+      .catch((err) => console.error("Error loading rentals:", err));
   }
 
   function extendRental(id) {
