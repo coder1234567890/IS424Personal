@@ -1,6 +1,7 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM fully loaded");
 
+  //Page Ids
   const pages = [
     "landing page",
     "main",
@@ -13,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     "RentalHistoryPage",
   ];
 
-  // Firebase Configuration
+  //Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyDPpcgBJG97tuFMe_ts2tRyt_S8j0Roslg",
     authDomain: "info-sys-471-project.firebaseapp.com",
@@ -27,20 +28,37 @@ document.addEventListener("DOMContentLoaded", function () {
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
+  const FV = firebase.firestore.FieldValue;
 
-  // Show the selected page and hide others
-  function showPage(pageId) {
-    pages.forEach((id) => {
-      const pageElement = document.getElementById(id);
-      if (pageElement) {
-        pageElement.classList.add("is-hidden");
-      }
-    });
-    document.getElementById(pageId).classList.remove("is-hidden");
+  const userRef = (uid) => db.doc(`users/${uid}`);
+  const deviceRef = (id) => db.doc(`devices/${id}`);
+
+  //page showing function
+  function showPage(id) {
+    pages.forEach((p) =>
+      document.getElementById(p)?.classList.add("is-hidden")
+    );
+    document.getElementById(id)?.classList.remove("is-hidden");
+    switch (id) {
+      case "AdminDevicesPage":
+        loadDevices();
+        break;
+      case "AdminRentalsPage":
+        loadRentals();
+        break;
+      case "CurrentUsersPage":
+        loadUsers();
+        break;
+      case "RentalHistoryPage":
+        loadRentalHistory();
+        break;
+      case "main":
+        loadDeviceOptions();
+        break;
+    }
   }
 
-  // Handle page navigation
-  const buttons = {
+  const nav = {
     homePage: "main",
     reviewp: "About Page",
     loginPageclick: "loginPage",
@@ -50,241 +68,461 @@ document.addEventListener("DOMContentLoaded", function () {
     manageUsersPage: "CurrentUsersPage",
     rentalHistoryPage: "RentalHistoryPage",
   };
+  Object.entries(nav).forEach(([btn, page]) =>
+    document
+      .getElementById(btn)
+      ?.addEventListener("click", () => showPage(page))
+  );
 
-  Object.keys(buttons).forEach((buttonId) => {
-    const buttonElement = document.getElementById(buttonId);
-    if (buttonElement) {
-      buttonElement.addEventListener("click", () =>
-        showPage(buttons[buttonId])
-      );
-    }
-  });
-
-  // Firebase login functionality
-  const loginButton = document.querySelector("#loginPage .button.is-info");
-  if (loginButton) {
-    loginButton.addEventListener("click", function () {
-      const email = document.querySelector(
-        "#loginPage input[type='email']"
-      ).value;
-      const password = document.querySelector(
-        "#loginPage input[type='password']"
-      ).value;
-
-      auth
-        .signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          console.log("User logged in:", userCredential.user);
-          showPage("main");
-        })
-        .catch((error) => {
-          console.error("Login error:", error.message);
-          alert(error.message);
-        });
-    });
-  }
-
-  // Firebase sign-up functionality
-  const signUpButton = document.querySelector("#signupPage .button.is-info");
-  if (signUpButton) {
-    signUpButton.addEventListener("click", function () {
+  // authenticate user
+  document
+    .querySelector("#signupPage .button.is-info")
+    ?.addEventListener("click", async () => {
       const email = document.querySelector(
         "#signupPage input[type='email']"
       ).value;
       const password = document.querySelector(
         "#signupPage input[type='password']"
       ).value;
-
-      auth
-        .createUserWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          console.log("User signed up:", userCredential.user);
-          showPage("main");
-        })
-        .catch((error) => {
-          console.error("Sign-up error:", error.message);
-          alert(error.message);
+      try {
+        const { user } = await auth.createUserWithEmailAndPassword(
+          email,
+          password
+        );
+        await userRef(user.uid).set({
+          displayName: user.displayName ?? "",
+          email,
+          role: "user",
+          createdAt: FV.serverTimestamp(),
         });
+        showPage("main");
+      } catch (err) {
+        alert(err.message);
+      }
     });
-  }
 
-  // Firebase logout functionality
-  const logoutButton = document.getElementById("logoutPage");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", function () {
-      auth
-        .signOut()
-        .then(() => {
-          console.log("User signed out");
-          showPage("landing page");
-        })
-        .catch((error) => {
-          console.error("Logout error:", error.message);
-          alert(error.message);
-        });
+  document
+    .querySelector("#loginPage .button.is-info")
+    ?.addEventListener("click", async () => {
+      const email = document.querySelector(
+        "#loginPage input[type='email']"
+      ).value;
+      const password = document.querySelector(
+        "#loginPage input[type='password']"
+      ).value;
+      try {
+        const { user } = await auth.signInWithEmailAndPassword(email, password);
+        const prof = userRef(user.uid);
+        const snap = await prof.get();
+        if (!snap.exists) {
+          await prof.set({
+            displayName: user.displayName ?? "",
+            email,
+            role: "user",
+            createdAt: FV.serverTimestamp(),
+          });
+        }
+        await prof.update({ lastLogin: FV.serverTimestamp() });
+        showPage("main");
+      } catch (err) {
+        alert(err.message);
+      }
     });
-  }
 
-  // Manage visibility based on login state
-  auth.onAuthStateChanged((user) => {
-    if (user) {
-      console.log("User is logged in:", user);
-      showPage("main");
-      document.getElementById("logoutPage").classList.remove("is-hidden");
-      document.getElementById("loginPageclick").classList.add("is-hidden");
-      document.getElementById("signupPageclick").classList.add("is-hidden");
+  document
+    .getElementById("logoutPage")
+    ?.addEventListener("click", () => auth.signOut());
 
-      // Check for admin custom claim
-      user
-        .getIdTokenResult()
-        .then((idTokenResult) => {
-          if (idTokenResult.claims.admin) {
-            // Show admin pages
-            document
-              .getElementById("manageDevicesPage")
-              .classList.remove("is-hidden");
-            document
-              .getElementById("manageRentalsPage")
-              .classList.remove("is-hidden");
-            document
-              .getElementById("manageUsersPage")
-              .classList.remove("is-hidden");
-          } else {
-            // Hide admin pages
-            document
-              .getElementById("manageDevicesPage")
-              .classList.add("is-hidden");
-            document
-              .getElementById("manageRentalsPage")
-              .classList.add("is-hidden");
-            document
-              .getElementById("manageUsersPage")
-              .classList.add("is-hidden");
-          }
-        })
-        .catch((error) => {
-          console.error("Error checking custom claims:", error);
-        });
-
-      document
-        .getElementById("rentalHistoryPage")
-        .classList.remove("is-hidden");
-    } else {
-      console.log("No user logged in");
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
       showPage("landing page");
-      document.getElementById("logoutPage").classList.add("is-hidden");
-      document.getElementById("loginPageclick").classList.remove("is-hidden");
-      document.getElementById("signupPageclick").classList.remove("is-hidden");
-      document.getElementById("manageDevicesPage").classList.add("is-hidden");
-      document.getElementById("manageRentalsPage").classList.add("is-hidden");
-      document.getElementById("manageUsersPage").classList.add("is-hidden");
-      document.getElementById("rentalHistoryPage").classList.add("is-hidden");
+      [
+        "logoutPage",
+        "manageDevicesPage",
+        "manageRentalsPage",
+        "manageUsersPage",
+        "rentalHistoryPage",
+        "homePage",
+      ].forEach((id) =>
+        document.getElementById(id)?.classList.add("is-hidden")
+      );
+      document.getElementById("loginPageclick")?.classList.remove("is-hidden");
+      document.getElementById("signupPageclick")?.classList.remove("is-hidden");
+      return;
+    }
+
+    showPage("main");
+    document.getElementById("logoutPage")?.classList.remove("is-hidden");
+    document.getElementById("loginPageclick")?.classList.add("is-hidden");
+    document.getElementById("signupPageclick")?.classList.add("is-hidden");
+    document.getElementById("homePage")?.classList.remove("is-hidden");
+    document.getElementById("rentalHistoryPage")?.classList.remove("is-hidden");
+
+    try {
+      const [roleSnap, token] = await Promise.all([
+        userRef(user.uid).get(),
+        user.getIdTokenResult(),
+      ]);
+      const docAdmin = roleSnap.exists && roleSnap.data().role === "admin";
+      const claimAdmin = !!token.claims.admin;
+      const isAdmin = docAdmin || claimAdmin;
+
+      //cache the claim into Firestore for next time
+      if (claimAdmin && !docAdmin) {
+        await userRef(user.uid).set({ role: "admin" }, { merge: true });
+      }
+
+      ["manageDevicesPage", "manageRentalsPage", "manageUsersPage"].forEach(
+        (id) =>
+          document.getElementById(id)?.classList.toggle("is-hidden", !isAdmin)
+      );
+    } catch (e) {
+      console.error(e);
     }
   });
-});
-// SPA Code
-function loadContent(section) {
-  const content = document.getElementById("main");
 
-  if (section === "Home") {
-    content.innerHTML = `
-        <div class="box">
-          <h2 class="title is-4">Home</h2>
-          <form>
-            <div class="field">
-              <label class="label">Start Date</label>
-              <div class="control">
-                <input class="input" type="text" placeholder="Enter Start Date">
-              </div>
-            </div>
-            <div class="field">
-              <label class="label">End Date</label>
-              <div class="control">
-                <input class="input" type="email" placeholder="Enter End Date">
-              </div>
-            </div>
-            <div class="field">
-              <label class="label">Reason For Rental</label>
-              <div class="control">
-                <input class="input" type="text" placeholder="Enter Reason for Rental">
-              </div>
-            </div>
-            <div class="control"></div>
-          </form>
-        </div>
-      `;
-  } else if (section === "About") {
-    content.innerHTML = `
-        <div class="content">
-          <h2 class="title is-4">About This Site</h2>
-          <p>This platform was designed to streamline laptop rentals for employees at Clack Corporation, built by the IT department. Our goal is to provide a simple and efficient way for team members to check out and manage laptops for work purposes.</p>
-        </div>
-      `;
-  } else if (section === "Login") {
-    content.innerHTML = `
-        <div class="box">
-          <h2 class="title is-4">Login</h2>
-          <form>
-            <div class="field">
-              <label class="label">Email</label>
-              <div class="control">
-                <input class="input" type="email" placeholder="Enter your email">
-              </div>
-            </div>
-            <div class="field">
-              <label class="label">Password</label>
-              <div class="control">
-                <input class="input" type="password" placeholder="Enter your password">
-              </div>
-            </div>
-            <div class="control">
-              <button class="button is-primary">Login</button>
-            </div>
-          </form>
-        </div>
-      `;
-  } else if (section === "Sign Up") {
-    content.innerHTML = `
-        <div class="box">
-          <h2 class="title is-4">Sign Up</h2>
-          <form>
-            <div class="field">
-              <label class="label">Name</label>
-              <div class="control">
-                <input class="input" type="text" placeholder="Enter your full name">
-              </div>
-            </div>
-            <div class="field">
-              <label class="label">Email</label>
-              <div class="control">
-                <input class="input" type="email" placeholder="Enter your email">
-              </div>
-            </div>
-            <div class="field">
-              <label class="label">Password</label>
-              <div class="control">
-                <input class="input" type="password" placeholder="Enter your password">
-              </div>
-            </div>
-            <div class="control">
-              <button class="button is-primary">Sign Up</button>
-            </div>
-          </form>
-        </div>
-      `;
-  } else if (section === "Manage Users") {
-    content.innerHTML = `
-        <div class="box">
-          <h2 class="title is-4">Manage Users</h2>
-          <!-- Manage Users content here -->
-        </div>
-      `;
-  } else if (section === "Contact IT") {
-    content.innerHTML = `
-        <div class="box">
-          <h2 class="title is-4">Contact IT</h2>
-          <p>If you have any issues, please reach out to the IT department.</p>
-        </div>
-      `;
+  //main page/rental request form
+  document.getElementById("rentalSubmit")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    submitRentalRequest();
+  });
+
+  async function submitRentalRequest() {
+    const user = auth.currentUser;
+    if (!user) return alert("Log in first.");
+
+    const form = document.querySelector("#main .box");
+    const [startDate, endDate, purpose] = [
+      ...form.querySelectorAll("input.input"),
+    ].map((i) => i.value.trim());
+    const deviceId = form.querySelector("select")?.value;
+    if (!deviceId) return alert("Choose a device.");
+
+    const dRef = deviceRef(deviceId);
+    const uRef = userRef(user.uid);
+    const rRef = db.collection("rentals").doc();
+
+    const batch = db.batch();
+    batch.set(rRef, {
+      device: dRef,
+      user: uRef,
+      startDate,
+      endDate,
+      purpose,
+      status: "active",
+      createdAt: FV.serverTimestamp(),
+    });
+    batch.update(dRef, { status: "checkedOut", currentRental: rRef });
+
+    try {
+      await batch.commit();
+      alert("Rental submitted.");
+      form.querySelectorAll("input, select").forEach((el) => {
+        if (el.tagName === "SELECT") {
+          el.selectedIndex = 0;
+        } else {
+          el.value = "";
+        }
+      });
+
+      loadDeviceOptions();
+    } catch (err) {
+      alert(err.message);
+    }
   }
-}
+  // loading devices in request form
+  function loadDeviceOptions() {
+    const sel = document.getElementById("deviceSelect");
+    if (!sel) {
+      console.warn("#deviceSelect not found");
+      return;
+    }
+    sel.innerHTML = '<option value="">Loading…</option>';
+
+    db.collection("devices")
+      .get()
+      .then((snap) => {
+        let html = '<option value="">Select a device</option>';
+        snap.forEach((doc) => {
+          const data = doc.data();
+          let status = data.status;
+          // edit old docs
+          if (!status) {
+            status = "available";
+            deviceRef(doc.id)
+              .update({ status })
+              .catch(() => {});
+          }
+          if (status === "available") {
+            html += `<option value="${doc.id}">${
+              data.name ?? "Unnamed"
+            }</option>`;
+          }
+        });
+        sel.innerHTML = html;
+      })
+      .catch((err) => {
+        console.error("Device dropdown error", err);
+        sel.innerHTML = '<option value="">Error loading devices</option>';
+      });
+  }
+
+  //Admin devices page
+  function loadDevices() {
+    const c = document.getElementById("AdminDevicesPage");
+    c.innerHTML = spinnerHTML();
+    db.collection("devices")
+      .get()
+      .then((snap) => {
+        let html = `<h1 class="title has-text-centered"><strong>Devices</strong></h1>
+         <button id="addDeviceButton" class="button is-primary">Add Device</button>`;
+        snap.forEach((doc) => {
+          const d = doc.data();
+          html += `
+          <div class="box" data-id="${doc.id}">
+            <h2 class="subtitle">${d.name ?? "Unnamed"} <small>(${
+            d.status ?? "available"
+          })</small></h2>
+            <p><strong>Type:</strong> ${d.type ?? "N/A"}</p>
+            <p><strong>Serial #:</strong> ${d.serialNumber ?? "N/A"}</p>
+            <div class="buttons">
+              <button class="button is-small is-info edit-device">Edit</button>
+              <button class="button is-small is-danger delete-device">Delete</button>
+            </div>
+          </div>`;
+        });
+        c.innerHTML = html;
+
+        document
+          .getElementById("addDeviceButton")
+          ?.addEventListener("click", addDevice);
+        c.querySelectorAll(".edit-device").forEach((btn) =>
+          btn.addEventListener("click", (e) =>
+            editDevice(e.target.closest(".box").dataset.id)
+          )
+        );
+        c.querySelectorAll(".delete-device").forEach((btn) =>
+          btn.addEventListener("click", (e) =>
+            deleteDevice(e.target.closest(".box").dataset.id)
+          )
+        );
+      });
+  }
+
+  function addDevice() {
+    const name = prompt("Device name:");
+    if (!name) return;
+    const type = prompt("Device type:") ?? "";
+    const serialNumber = prompt("Serial number:") ?? "";
+    db.collection("devices")
+      .add({ name, type, serialNumber, status: "available" })
+      .then(loadDevices);
+  }
+  function editDevice(id) {
+    const newName = prompt("New name:");
+    if (!newName) return;
+    deviceRef(id).update({ name: newName }).then(loadDevices);
+  }
+  function deleteDevice(id) {
+    if (!confirm("Delete device?")) return;
+    deviceRef(id).delete().then(loadDevices);
+  }
+
+  //Rental manaegment page for amdins
+  async function loadRentals() {
+    const c = document.getElementById("AdminRentalsPage");
+    c.innerHTML = spinnerHTML();
+    const snap = await db.collection("rentals").get();
+    let html = `<h1 class="title"><strong>Manage Rentals</strong></h1>`;
+    for (const doc of snap.docs) {
+      const d = doc.data();
+      const devSnap = await d.device.get();
+      const usrSnap = await d.user.get();
+      html += `
+        <div class="box" data-id="${doc.id}">
+          <h2 class="subtitle">${usrSnap.data().email}</h2>
+          <p><strong>Device:</strong> ${devSnap.data().name}</p>
+          <p><strong>Purpose:</strong> ${d.purpose}</p>
+          <p><strong>Status:</strong> ${d.status}</p>
+          <p><strong>Start:</strong> ${
+            d.startDate
+          } &nbsp; <strong>End:</strong> ${d.endDate}</p>
+          <div class="buttons">
+            <button class="button is-small is-info edit-rental">Edit</button>
+            <button class="button is-small is-danger delete-rental">Delete</button>
+          </div>
+        </div>`;
+    }
+    c.innerHTML = html;
+    c.querySelectorAll(".edit-rental").forEach((btn) =>
+      btn.addEventListener("click", (e) =>
+        editRental(e.target.closest(".box").dataset.id)
+      )
+    );
+    c.querySelectorAll(".delete-rental").forEach((btn) =>
+      btn.addEventListener("click", (e) =>
+        deleteRental(e.target.closest(".box").dataset.id)
+      )
+    );
+  }
+
+  function editRental(id) {
+    const newPurpose = prompt("New purpose:");
+    if (!newPurpose) return;
+    db.collection("rentals")
+      .doc(id)
+      .update({ purpose: newPurpose })
+      .then(loadRentals);
+  }
+  function deleteRental(id) {
+    if (!confirm("Delete this rental?")) return;
+    const rRef = db.collection("rentals").doc(id);
+    db.runTransaction(async (t) => {
+      const snap = await t.get(rRef);
+      const dRef = snap.data().device;
+      t.delete(rRef);
+      t.update(dRef, { status: "available", currentRental: null });
+    }).then(loadRentals);
+  }
+
+  //user management page for admins
+  function loadUsers() {
+    const c = document.getElementById("CurrentUsersPage");
+    c.innerHTML = spinnerHTML();
+    db.collection("users")
+      .get()
+      .then((snap) => {
+        let html = `<h1 class="title"><strong>Current Users</strong></h1>`;
+        snap.forEach((doc) => {
+          const d = doc.data();
+          html += `
+          <div class="box" data-id="${doc.id}">
+            <h2 class="subtitle">${d.displayName || d.email}</h2>
+            <p><strong>Email:</strong> ${d.email}</p>
+            <p><strong>Role:</strong> ${d.role}</p>
+            <div class="buttons">
+              <button class="button is-small is-info view-user">View Details</button>
+              <button class="button is-small is-danger remove-user">Remove</button>
+            </div>
+          </div>`;
+        });
+        c.innerHTML = html;
+        c.querySelectorAll(".view-user").forEach((btn) =>
+          btn.addEventListener("click", (e) =>
+            viewUser(e.target.closest(".box").dataset.id)
+          )
+        );
+        c.querySelectorAll(".remove-user").forEach((btn) =>
+          btn.addEventListener("click", (e) =>
+            removeUser(e.target.closest(".box").dataset.id)
+          )
+        );
+      });
+  }
+  function viewUser(uid) {
+    userRef(uid)
+      .get()
+      .then((snap) => alert(JSON.stringify(snap.data(), null, 2)));
+  }
+  function removeUser(uid) {
+    if (!confirm("Remove this user?")) return;
+    userRef(uid).delete().then(loadUsers);
+  }
+  //users rental history
+  function loadRentalHistory() {
+    const user = auth.currentUser;
+    const c = document.getElementById("RentalHistoryPage");
+    c.innerHTML = spinnerHTML();
+    if (!user) return alert("Log in first");
+    const uRef = userRef(user.uid);
+
+    const currentQ = db
+      .collection("rentals")
+      .where("user", "==", uRef)
+      .where("status", "==", "active")
+      .get();
+    const pastQ = db
+      .collection("rentals")
+      .where("user", "==", uRef)
+      .where("status", "==", "returned")
+      .get();
+
+    Promise.all([currentQ, pastQ]).then(async ([curSnap, pastSnap]) => {
+      let html = `<h1 class="title has-text-centered"><strong>My Rentals</strong></h1>`;
+
+      const render = async (snap, title, current) => {
+        html += `<h2 class="subtitle has-text-centered"><strong>${title}</strong></h2>`;
+        if (snap.empty) {
+          html += `<p class="has-text-centered">None.</p>`;
+          return;
+        }
+        html += `<div class="columns is-multiline is-centered">`;
+        for (const doc of snap.docs) {
+          const d = doc.data();
+          const devSnap = await d.device.get();
+          html += `
+            <div class="column is-one-third">
+              <div class="box has-text-centered" data-id="${doc.id}">
+                <h2 class="subtitle">${devSnap.data().name}</h2>
+                <p><strong>Purpose:</strong> ${d.purpose}</p>
+                <p><strong>Start:</strong> ${
+                  d.startDate
+                } &nbsp; <strong>End:</strong> ${d.endDate}</p>
+                ${
+                  current
+                    ? `<div class="buttons is-centered">
+                         <button class="button is-small is-info extend-rental">Extend</button>
+                         <button class="button is-small is-danger return-device">Return</button>
+                       </div>`
+                    : `<p><em>Returned</em></p>`
+                }
+              </div>
+            </div>`;
+        }
+        html += `</div>`;
+      };
+
+      await render(curSnap, "Current Rentals", true);
+      await render(pastSnap, "Past Rentals", false);
+
+      c.innerHTML = html;
+      c.querySelectorAll(".extend-rental").forEach((btn) =>
+        btn.addEventListener("click", (e) =>
+          extendRental(e.target.closest(".box").dataset.id)
+        )
+      );
+      c.querySelectorAll(".return-device").forEach((btn) =>
+        btn.addEventListener("click", (e) =>
+          returnDevice(e.target.closest(".box").dataset.id)
+        )
+      );
+    });
+  }
+
+  function extendRental(id) {
+    const newEnd = prompt("New end date (YYYY-MM-DD):");
+    if (!newEnd) return;
+    db.collection("rentals").doc(id).update({ endDate: newEnd });
+  }
+
+  function returnDevice(id) {
+    if (!confirm("Return device?")) return;
+    const rRef = db.collection("rentals").doc(id);
+    db.runTransaction(async (t) => {
+      const snap = await t.get(rRef);
+      const dRef = snap.data().device;
+      t.update(rRef, { status: "returned", returnedAt: FV.serverTimestamp() });
+      t.update(dRef, { status: "available", currentRental: null });
+    }).then(loadRentalHistory);
+  }
+  //just something for fun to make it less clunky when loading things
+  function spinnerHTML(msg = "Loading…") {
+    return `
+      <div class="has-text-centered py-6">
+        <span class="icon is-large has-text-info">
+          <i class="fas fa-spinner fa-pulse fa-2x"></i>
+        </span>
+        <p class="mt-3">${msg}</p>
+      </div>`;
+  }
+});
