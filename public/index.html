@@ -9,6 +9,10 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
   </head>
 
   <!-- Header -->
@@ -75,10 +79,13 @@
         >🗄 My Rentals</a
       >
       <a
-        class="navbar-item open-modal button is-info is-outlined mx-2"
         id="contactITPage"
-        >🖥️ Contact IT</a
+        class="navbar-item button is-info is-outlined mx-2"
+        href="mailto:helpdesk@clackcorp.com?subject=Device%20Rental%20Support"
       >
+        🖥️ Contact IT
+      </a>
+
       <a class="navbar-item button is-danger is-outlined mx-2" id="logoutPage"
         >❌ Logout</a
       >
@@ -133,22 +140,28 @@
             <label class="label has-text-info">Start Date</label>
             <div class="control">
               <input
+                id="startDate"
                 class="input is-info"
-                type="text"
-                placeholder="Enter Start Date"
+                type="date"
+                data-display-mode="dialog"
+                data-min-date="today"
               />
             </div>
           </div>
+
           <div class="field">
             <label class="label has-text-info">End Date</label>
             <div class="control">
               <input
+                id="endDate"
                 class="input is-info"
-                type="text"
-                placeholder="Enter End Date"
+                type="date"
+                data-display-mode="dialog"
+                data-min-date="today"
               />
             </div>
           </div>
+
           <div class="field">
             <label class="label has-text-info">Reason For Rental</label>
             <div class="control">
@@ -308,16 +321,6 @@
         <div class="column is-half">
           <div class="box">
             <h1 class="title"><strong>Devices</strong></h1>
-            <!-- Example device entry -->
-            <div class="box">
-              <h2 class="subtitle">MacBook Pro 16"</h2>
-              <p><strong>Device Type:</strong> Laptop</p>
-              <p><strong>Serial Number:</strong> SN12345XYZ</p>
-              <div class="buttons">
-                <button class="button is-small is-info">Edit</button>
-                <button class="button is-small is-danger">Delete</button>
-              </div>
-            </div>
             <!-- Additional device entries can go here -->
           </div>
         </div>
@@ -330,18 +333,6 @@
         <div class="column is-half">
           <div class="box">
             <h1 class="title"><strong>Manage Rentals</strong></h1>
-            <!-- Example rental entry -->
-            <div class="box">
-              <h2 class="subtitle">John Doe</h2>
-              <p><strong>Device:</strong> MacBook Pro 16"</p>
-              <p><strong>Purpose:</strong> Project Work</p>
-              <p><strong>Start Date:</strong> 2024-02-01</p>
-              <p><strong>End Date:</strong> 2024-02-10</p>
-              <div class="buttons">
-                <button class="button is-small is-info">Edit</button>
-                <button class="button is-small is-danger">Delete</button>
-              </div>
-            </div>
             <!-- Additional rental entries can go here -->
           </div>
         </div>
@@ -354,15 +345,6 @@
         <div class="column is-half">
           <div class="box">
             <h1 class="title"><strong>Current Users</strong></h1>
-            <!-- Example user entry -->
-            <div class="box">
-              <h2 class="subtitle">John Doe</h2>
-              <p><strong>Username:</strong> johndoe123</p>
-              <div class="buttons">
-                <button class="button is-small is-info">View Details</button>
-                <button class="button is-small is-danger">Remove</button>
-              </div>
-            </div>
             <!-- Additional user entries can go here -->
           </div>
         </div>
@@ -377,56 +359,33 @@
             <h1 class="title has-text-centered">
               <strong>Rental History</strong>
             </h1>
-            <div class="columns">
-              <!-- Current Rental Example -->
-              <div class="column">
-                <div class="box">
-                  <h2 class="subtitle"><strong>Current Rental</strong></h2>
-                  <p><strong>Device:</strong> MacBook Pro 16"</p>
-                  <p><strong>Purpose:</strong> Software Development</p>
-                  <p><strong>Start Date:</strong> 2024-02-01</p>
-                  <p><strong>End Date:</strong> 2024-02-10</p>
-                  <div class="buttons">
-                    <button class="button is-small is-info">
-                      Extend Rental
-                    </button>
-                    <button class="button is-small is-danger">
-                      Return Device
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <!-- Past Rentals Example -->
-              <div class="column">
-                <div class="box">
-                  <h2 class="subtitle"><strong>Past Rentals</strong></h2>
-                  <p><strong>Device:</strong> iPad Pro</p>
-                  <p><strong>Purpose:</strong> Business Travel</p>
-                  <p><strong>Start Date:</strong> 2023-12-15</p>
-                  <p><strong>End Date:</strong> 2023-12-22</p>
-                  <div class="buttons">
-                    <button class="button is-small is-info">
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma-calendar@6.1.18/dist/css/bulma-calendar.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bulma-calendar@6.1.18/dist/js/bulma-calendar.min.js"></script>
   </body>
 
   <!-- Footer -->
   <footer class="has-text-centered has-background-light mt-auto">
     <br />
     <p>Copyright © 2025 Clack Corporation</p>
-    <button id="ITFooter" class="button open-modal is-info is-outlined mt-3">
+
+    <a
+      id="ITFooter"
+      class="button is-info is-outlined mt-3"
+      href="mailto:helpdesk@clackcorp.com?subject=Device%20Rental%20Support"
+    >
       ⚡ Contact IT
-    </button>
+    </a>
+
     <br /><br />
   </footer>
+
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-auth.js"></script>
