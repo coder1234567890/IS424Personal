@@ -11,9 +11,7 @@ async function go() {
   //   access site
   const page = await browser.newPage();
 
-  await page.goto(
-    "http://127.0.0.1:5500/TermProject/IS424Personal/public/index.html"
-  );
+  await page.goto("http://127.0.0.1:5500/public/index.html");
 
   // click on the login button
   await page.click("#loginPageclick");
