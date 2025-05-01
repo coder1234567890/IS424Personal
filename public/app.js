@@ -96,8 +96,8 @@ document.addEventListener("DOMContentLoaded", () => {
           createdAt: FV.serverTimestamp(),
         });
         showPage("main");
-      } catch (err) {
-        alert(err.message);
+      } catch (e) {
+        if (e.code !== "permission-denied") console.error(e);
       }
     });
 
@@ -124,8 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         await prof.update({ lastLogin: FV.serverTimestamp() });
         showPage("main");
-      } catch (err) {
-        alert(err.message);
+      } catch (e) {
+        if (e.code !== "permission-denied") console.error(e);
       }
     });
 
