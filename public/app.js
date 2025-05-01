@@ -336,17 +336,25 @@ document.addEventListener("DOMContentLoaded", () => {
     let html = `<h1 class="title"><strong>Manage Rentals</strong></h1>`;
     for (const doc of snap.docs) {
       const d = doc.data();
-      const devSnap = await d.device.get();
-      const usrSnap = await d.user.get();
+      const devName =
+        typeof d.device === "string"
+          ? (await deviceRef(d.device).get()).data().name
+          : (await d.device.get()).data().name;
+      let userEmail = d.userName || "Unknown";
+
+      if (d.user && typeof d.user.get === "function") {
+        try {
+          const snapUser = await d.user.get();
+          if (snapUser.exists) userEmail = snapUser.data().email;
+        } catch (_) {}
+      }
       html += `
         <div class="box" data-id="${doc.id}">
-          <h2 class="subtitle">${usrSnap.data().email}</h2>
-          <p><strong>Device:</strong> ${devSnap.data().name}</p>
+          <h2 class="subtitle">${userEmail}</h2>
+          <p><strong>Device:</strong> ${devName}</p>
           <p><strong>Purpose:</strong> ${d.purpose}</p>
           <p><strong>Status:</strong> ${d.status}</p>
-          <p><strong>Start:</strong> ${
-            d.startDate
-          } &nbsp; <strong>End:</strong> ${d.endDate}</p>
+          <p><strong>Start:</strong> ${d.startDate} &nbsp; <strong>End:</strong> ${d.endDate}</p>
           <div class="buttons">
             <button class="button is-small is-info edit-rental">Edit</button>
             <button class="button is-small is-danger delete-rental">Delete</button>
